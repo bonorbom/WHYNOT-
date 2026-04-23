@@ -11,6 +11,7 @@ local player = Players.LocalPlayer
 Fly.Enabled = false
 Fly.Speed = 60
 Fly.Connection = nil
+Fly.BodyVelocity = nil
 
 function Fly.Start()
     if Fly.Enabled then return end
@@ -19,14 +20,22 @@ function Fly.Start()
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
 
+    if hrp:FindFirstChild("BON_FLY") then
+        hrp.BON_FLY:Destroy()
+    end
+
     local bv = Instance.new("BodyVelocity")
     bv.Name = "BON_FLY"
     bv.MaxForce = Vector3.new(999999,999999,999999)
     bv.Velocity = Vector3.zero
     bv.Parent = hrp
 
+    Fly.BodyVelocity = bv
+
     Fly.Connection = RunService.RenderStepped:Connect(function()
         if not Fly.Enabled then return end
+        if not player.Character then return end
+        if not hrp.Parent then return end
 
         local cam = workspace.CurrentCamera
         local moveDir = Vector3.zero
@@ -34,18 +43,23 @@ function Fly.Start()
         if UIS:IsKeyDown(Enum.KeyCode.W) then
             moveDir += cam.CFrame.LookVector
         end
+
         if UIS:IsKeyDown(Enum.KeyCode.S) then
             moveDir -= cam.CFrame.LookVector
         end
+
         if UIS:IsKeyDown(Enum.KeyCode.A) then
             moveDir -= cam.CFrame.RightVector
         end
+
         if UIS:IsKeyDown(Enum.KeyCode.D) then
             moveDir += cam.CFrame.RightVector
         end
+
         if UIS:IsKeyDown(Enum.KeyCode.Space) then
             moveDir += Vector3.new(0,1,0)
         end
+
         if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
             moveDir -= Vector3.new(0,1,0)
         end
@@ -64,6 +78,11 @@ function Fly.Stop()
     if Fly.Connection then
         Fly.Connection:Disconnect()
         Fly.Connection = nil
+    end
+
+    if Fly.BodyVelocity then
+        Fly.BodyVelocity:Destroy()
+        Fly.BodyVelocity = nil
     end
 
     local char = player.Character
